@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+
 use App\Models\Product;
 use App\Models\Cart;
+use App\Models\User;
 use App\Models\Order;
+use App\Models\Prescription;
+use App\Models\category;
 
-use Session;
 use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
@@ -15,8 +19,9 @@ class ProductController extends Controller
     function index()
     {
         $data= Product::all();
+        $data1=category::all();
 
-       return view('product',['products'=>$data]);
+       return view('product',['products'=>$data,'categories'=>$data1]);
     }
     function detail($id)
     {
@@ -105,5 +110,36 @@ class ProductController extends Controller
          ->get();
  
          return view('myorders',['orders'=>$orders]);
+    }
+
+
+    function prescriptionStore(Request $request)
+    {
+
+        $info=new Prescription();
+        $userId=Session::get('user')['id'];
+        $userInfo=User::find($userId);
+        $info->name=$userInfo->name;
+        $info->user_id=$userId;
+        $info->address=$request->address;
+
+
+        $fileName = time().$request->file('photo')->getClientOriginalName();
+        $path = $request->file('photo')->storeAs('public/images', $fileName);
+        $info->photo = 'storage/images/'.$fileName;
+
+        // Prescription::create($info);
+        $info->save();
+        return redirect()->route('homepage');
+    }
+
+    function cat_detail( $request){
+
+         $data=DB::table('products')->where('category',$request)->get();
+        //  echo "<pre>";
+        //  print_r($data);
+
+
+        return view('catProductShow',['data'=>$data]);
     }
 }
